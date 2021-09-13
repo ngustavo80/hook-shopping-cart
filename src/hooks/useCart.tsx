@@ -1,7 +1,7 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
-import { toast } from 'react-toastify';
-import { api } from '../services/api';
-import { Product, Stock } from '../types';
+import { createContext, ReactNode, useContext, useState } from 'react'
+import { toast } from 'react-toastify'
+import { api } from '../services/api'
+import { Product } from '../types'
 
 interface CartProviderProps {
   children: ReactNode;
@@ -19,7 +19,7 @@ interface CartContextData {
   updateProductAmount: ({ productId, amount }: UpdateProductAmount) => void;
 }
 
-const CartContext = createContext<CartContextData>({} as CartContextData);
+const CartContext = createContext<CartContextData>({} as CartContextData)
 
 export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const [cart, setCart] = useState<Product[]>(() => {
@@ -29,13 +29,13 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       return JSON.parse(storagedCart);
     }
 
-    return [];
-    });
+    return []
+    })
 
   const addProduct = async (productId: number) => {
     try {
-      const updatedCart = [...cart]; //Faz com que updatedCart tenha o mesmo valor de cart e não seja uma referência mantendo a imutabilidade.
-      const productExists = updatedCart.find(product => product.id === productId);
+      const updatedCart = [...cart] //Faz com que updatedCart tenha o mesmo valor de cart e não seja uma referência mantendo a imutabilidade.
+      const productExists = updatedCart.find(product => product.id === productId)
 
       const stock = await api.get(`/stock/${productId}`) //Busca no banco de dados o estoque do produto.
       
@@ -63,34 +63,66 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         
         updatedCart.push(newProduct)
 
-        setCart(updatedCart) // setCart a função no estado que atualiza o valor de cart.
-        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart)) // Salvando o carrinho no localStorage.
       }
+      
+      setCart(updatedCart) // setCart a função no estado que atualiza o valor de cart.
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart)) // Salvando o carrinho no localStorage.
       
     } catch {
       toast.error('Erro na adição do produto');
     }
-  };
+  }
 
   const removeProduct = (productId: number) => {
     try {
-      const updatedCart = [...cart];
+      const updatedCart = [...cart]
+      const productIndex = updatedCart.findIndex(product => product.id === productId) // Verifica se o produto existe pelo id do produto.
+
+      // O método findIndex retorna o valor -1 se não encontrar o index por isso a condiçao no if é a variável >= 0.
+      if (productIndex >= 0) {
+        // O método splice ele remove uma posição no array, passando que posição começa e quantos item ele vai remover a partir do começo do primeiro argumento.
+        updatedCart.splice(productIndex, 1) 
+
+        setCart(updatedCart)
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
+      } else {
+        throw Error()
+      }
 
     } catch {
-      // TODO
+      toast.error('Erro na remoção do produto')
     }
-  };
+  }
 
-  const updateProductAmount = async ({
-    productId,
-    amount,
-  }: UpdateProductAmount) => {
+  const updateProductAmount = async ({ productId, amount }: UpdateProductAmount) => {
     try {
-      // TODO
+      if (amount <= 0) {
+        return
+      }
+
+      const stock = await api.get(`stock/${productId}`)
+      const stockAmount = stock.data.amount
+
+      if (amount > stockAmount) {
+        toast.error('Quantidade solicitada fora de estoque')
+        return
+      }
+
+      const updatedCart = [...cart]
+      const productExists = updatedCart.find(product => product.id === productId)
+
+      if (productExists) {
+        productExists.amount = amount
+        setCart(updatedCart)
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
+      } else {
+        throw Error()
+      }
+
     } catch {
-      // TODO
+      toast.error('Erro na alteração de quantidade do produto')
     }
-  };
+  }
 
   return (
     <CartContext.Provider
@@ -98,11 +130,11 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     >
       {children}
     </CartContext.Provider>
-  );
+  )
 }
 
 export function useCart(): CartContextData {
-  const context = useContext(CartContext);
+  const context = useContext(CartContext)
 
   return context;
 }
