@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { MdAddShoppingCart } from 'react-icons/md';
+import React, { useState, useEffect } from 'react'
+import { MdAddShoppingCart } from 'react-icons/md'
 
-import { ProductList } from './styles';
-import { api } from '../../services/api';
-import { formatPrice } from '../../util/format';
-import { useCart } from '../../hooks/useCart';
+import { ProductList } from './styles'
+import { api } from '../../services/api'
+import { formatPrice } from '../../util/format'
+import { useCart } from '../../hooks/useCart'
 
 interface Product {
   id: number;
@@ -23,8 +23,8 @@ interface CartItemsAmount {
 }
 
 const Home = (): JSX.Element => {
-  const [products, setProducts] = useState<ProductFormatted[]>([]);
-  const { addProduct, cart } = useCart();
+  const [products, setProducts] = useState<ProductFormatted[]>([])
+  const { addProduct, cart } = useCart()
 
   const cartItemsAmount = cart.reduce((sumAmount, product) => {
     const newSumAmount = {...sumAmount}
@@ -45,8 +45,8 @@ const Home = (): JSX.Element => {
       setProducts(data)
     }
 
-    loadProducts();
-  }, []);
+    loadProducts()
+  }, [])
 
   function handleAddProduct(id: number) {
     addProduct(id)
@@ -76,7 +76,7 @@ const Home = (): JSX.Element => {
         )
       })}
     </ProductList>
-  );
-};
+  )
+}
 
-export default Home;
+export default Home
